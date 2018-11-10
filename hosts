@@ -1,0 +1,160 @@
+# Create an OSEv3 group that contains the master, nodes, etcd, and lb groups.
+# The lb group lets Ansible configure HAProxy as the load balancing solution.
+# Comment lb out if your load balancer is pre-configured.
+[OSEv3:children]
+masters
+nodes
+etcd
+lb
+glusterfs
+#glusterfs_registry
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+ansible_ssh_user=root
+openshift_deployment_type=origin
+#debug_level=8
+#openshift_debug_level="{{ debug_level }}"
+#openshift_master_audit_config=true
+
+
+
+# https://github.com/openshift/origin-metrics/issues/429
+#openshift_metrics_cassandra_image="docker.io/openshift/origin-metrics-cassandra:v3.11.0"
+#openshift_metrics_hawkular_metrics_image="docker.io/openshift/origin-metrics-hawkular-metrics:v3.11.0"
+#openshift_metrics_heapster_image="docker.io/openshift/origin-metrics-heapster:v3.11.0"
+# https://github.com/openshift/origin-metrics/issues/429#issuecomment-417124646
+#openshift_metrics_schema_installer_image="docker.io/alv91/origin-metrics-schema-installer:v3.10.0"
+
+
+
+#openshift_master_overwrite_named_certificates=true
+#openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/certificate.key", "names": ["m01.okd.supercass.com","m02.okd.supercass.com","m03.okd.supercass.com"], "cafile": "/etc/ssl/star_okd_supercass_com/CA_star_okd_supercass_com.crt"}]
+#openshift_master_ca_certificate={'certfile': '/etc/ssl/star_okd_supercass_com/CA_star_okd_supercass_com.crt', 'keyfile': '/etc/ssl/star_okd_supercass_com/certificate.key'}
+
+
+
+app_dns_prefix=app
+public_hosted_zone=okd.supercass.com
+load_balancer_hostname=bastion.{{public_hosted_zone}}
+
+# Configuring Cluster Variables
+#openshift_master_default_subdomain=app.okd.supercass.com
+
+
+openshift_hostname=master-internal.okd.supercass.com
+openshift_public_hostname=m.okd.supercass.com
+
+# Enable this to use the 3.11 repo
+#openshift_additional_repos=[{'id': 'centos-okd-ci', 'name': 'centos-okd-ci', 'baseurl' :'https://rpms.svc.ci.openshift.org/openshift-origin-v3.11', 'gpgcheck' :'0', 'enabled' :'1'}]
+openshift_release="3.10"
+
+# GlustFS Containerized
+openshift_storage_glusterfs_namespace=app-storage
+openshift_storage_glusterfs_name=storage
+openshift_storage_glusterfs_storageclass=true
+openshift_storage_glusterfs_storageclass_default=false
+openshift_storage_glusterfs_block_deploy=true
+openshift_storage_glusterfs_block_host_vol_size=100
+openshift_storage_glusterfs_block_storageclass=true
+openshift_storage_glusterfs_block_storageclass_default=false
+
+# Docker Registry
+#openshift_hosted_registry_storage_kind=glusterfs 
+openshift_hosted_registry_storage_volume_size=10Gi
+openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
+
+openshift_use_system_containers=False
+
+
+# Use firewalld on clean install
+os_firewall_use_firewalld=true
+
+# Configuring Cluster Metrics
+openshift_metrics_install_metrics=false
+#openshift_metrics_cassandra_storage_type=dynamic
+
+
+# Configuring Cluster Logging
+openshift_logging_install_logging=false
+#openshift_logging_es_pvc_dynamic=true
+
+
+# Customizing Service Catalog Options
+openshift_enable_service_catalog=false
+
+
+# etcd
+openshift_use_etcd_system_container=true
+
+# https://github.com/openshift/openshift-ansible/issues/9894#issuecomment-418233398
+openshift_disable_check=disk_availability,docker_storage,memory_availability
+openshift_check_min_host_memory_gb=1
+openshift_check_min_host_disk_gb=10
+
+
+# uncomment the following to enable htpasswd authentication; defaults to AllowAllPasswordIdentityProvider
+#openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'True', 'kind': 'HTPasswdPasswordIdentityProvider', 'file': '/etc/origin/master/htpasswd'}]
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'True', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+#openshift_master_htpasswd_users={'admin': '$apr1$zAhyA9Ko$rBxBOwAwwtRuuaw8OtCwH0'}
+
+
+# Native high availability cluster method with optional load balancer.
+# If no lb group is defined installer assumes that a load balancer has
+# been preconfigured. For installation the value of
+# openshift_master_cluster_hostname must resolve to the load balancer
+# or to one or all of the masters defined in the inventory if no load
+# balancer is present.
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname="{{ load_balancer_hostname }}"
+#master-internal.okd.supercass.com
+openshift_master_cluster_public_hostname="{{ load_balancer_hostname }}"
+#m.okd.supercass.com
+openshift_master_default_subdomain="{{ app_dns_prefix }}.{{ public_hosted_zone }}"
+
+
+openshift_docker_use_system_container=False
+
+# host group for masters
+[masters]
+m01.okd.supercass.com
+m02.okd.supercass.com
+m03.okd.supercass.com
+
+
+# host group for etcd
+[etcd]
+m01.okd.supercass.com
+m02.okd.supercass.com
+m03.okd.supercass.com
+
+
+# Specify load balancer host
+[lb]
+bastion.okd.supercass.com
+
+
+# host group for nodes, includes region info
+[nodes]
+m01.okd.supercass.com openshift_node_group_name='node-config-master'
+m02.okd.supercass.com openshift_node_group_name='node-config-master'
+m03.okd.supercass.com openshift_node_group_name='node-config-master'
+i01.okd.supercass.com openshift_node_group_name='node-config-infra'
+i02.okd.supercass.com openshift_node_group_name='node-config-infra'
+app01.okd.supercass.com openshift_node_group_name='node-config-compute'
+app02.okd.supercass.com openshift_node_group_name='node-config-compute'
+app03.okd.supercass.com openshift_node_group_name='node-config-compute'
+
+
+[glusterfs]
+app01.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
+app02.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
+app03.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
+
+
+# Disabled for now because doing registry on same disk as apps isn't supported due to apparent i/o issue
+#[glusterfs_registry]
+#app01.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
+#app02.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
+#app03.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
+
