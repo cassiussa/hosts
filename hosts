@@ -19,18 +19,20 @@ openshift_deployment_type=origin
 
 
 
-# https://github.com/openshift/origin-metrics/issues/429
-#openshift_metrics_cassandra_image="docker.io/openshift/origin-metrics-cassandra:v3.11.0"
-#openshift_metrics_hawkular_metrics_image="docker.io/openshift/origin-metrics-hawkular-metrics:v3.11.0"
-#openshift_metrics_heapster_image="docker.io/openshift/origin-metrics-heapster:v3.11.0"
-# https://github.com/openshift/origin-metrics/issues/429#issuecomment-417124646
-#openshift_metrics_schema_installer_image="docker.io/alv91/origin-metrics-schema-installer:v3.10.0"
+openshift_master_overwrite_named_certificates=true
 
-
-
-#openshift_master_overwrite_named_certificates=true
 #openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/certificate.key", "names": ["m01.okd.supercass.com","m02.okd.supercass.com","m03.okd.supercass.com"], "cafile": "/etc/ssl/star_okd_supercass_com/CA_star_okd_supercass_com.crt"}]
-#openshift_master_ca_certificate={'certfile': '/etc/ssl/star_okd_supercass_com/CA_star_okd_supercass_com.crt', 'keyfile': '/etc/ssl/star_okd_supercass_com/certificate.key'}
+
+openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/certificate.key", "names": ["bastion.okd.supercass.com], "cafile": "/etc/ssl/star_okd_supercass_com/CA_star_okd_supercass_com.crt"}]
+
+# Configure custom ca certificate
+# NOTE: CA certificate will not be replaced with existing clusters.
+# This option may only be specified when creating a new cluster or
+# when redeploying cluster certificates with the redeploy-certificates
+# playbook. ? playbooks/redeploy-certificates.yml ?
+openshift_master_ca_certificate={'certfile': '/etc/ssl/star_okd_supercass_com/CA_star_okd_supercass_com.crt', 'keyfile': '/etc/ssl/star_okd_supercass_com/certificate.key'}
+
+openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/crt.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/private.key", "cafile": "/etc/ssl/star_app_okd_supercass_com/CABundle.crt"}
 
 
 
