@@ -46,8 +46,9 @@ openshift_hostname=master-internal.okd.supercass.com
 openshift_public_hostname=m.okd.supercass.com
 
 # Enable this to use the 3.11 repo
-#openshift_additional_repos=[{'id': 'centos-okd-ci', 'name': 'centos-okd-ci', 'baseurl' :'https://rpms.svc.ci.openshift.org/openshift-origin-v3.11', 'gpgcheck' :'0', 'enabled' :'1'}]
-openshift_release="3.10"
+# COMMENT THIS OUT WHEN 3.10 AND UPDATE 2ND DOWN WITH "3.10"
+openshift_additional_repos=[{'id': 'centos-okd-ci', 'name': 'centos-okd-ci', 'baseurl' :'https://rpms.svc.ci.openshift.org/openshift-origin-v3.11', 'gpgcheck' :'0', 'enabled' :'1'}]
+openshift_release="3.11"
 
 # GlustFS Containerized
 openshift_storage_glusterfs_namespace=app-storage
@@ -63,6 +64,7 @@ openshift_storage_glusterfs_block_storageclass_default=false
 #openshift_hosted_registry_storage_kind=glusterfs 
 openshift_hosted_registry_storage_volume_size=10Gi
 openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
+#openshift_hosted_registry_replicas=2
 
 openshift_use_system_containers=False
 
