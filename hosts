@@ -7,7 +7,7 @@ nodes
 etcd
 lb
 glusterfs
-#glusterfs_registry
+glusterfs_registry
 
 # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
@@ -19,29 +19,42 @@ openshift_deployment_type=origin
 
 
 
+
+
+
+
+# If you provide a value for the openshift_master_named_certificates parameter, set this parameter to true
 #openshift_master_overwrite_named_certificates=true
 
-#openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/certificate.key", "names": ["m.okd.supercass.com","m01.okd.supercass.com","m02.okd.supercass.com","m03.okd.supercass.com"], "cafile": "/etc/ssl/star_okd_supercass_com/CA_star_okd_supercass_com.crt"}]
-#openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/certificate.key", "names": ["m.okd.supercass.com","m01.okd.supercass.com","m02.okd.supercass.com","m03.okd.supercass.com"], "cafile": "/etc/ssl/root-intermediate/star_okd_supercass_com.crt"}]
+# Provisions a master API certificate - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-master
+#openshift_master_named_certificates=[{"certfile": "/etc/ssl/m.okd.supercass.com/certificate_only.crt", "keyfile": "/etc/ssl/m.okd.supercass.com/domain_key.key", "cafile": "/etc/ssl/m.okd.supercass.com/ca-bundle.crt", "names": ["m.okd.supercass.com"]}]
 
+# Provisions a wildcard API certificate - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-wildcard
+# I'm unsure if the CA needed to be in "certfile" so I left it out.  As for "cafile", I also don't know if I need to somehow find the root CA or if the cross-signed one in the LetsEncrypt CA is fine
+openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/crt.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/private.key", "cafile": "/etc/ssl/star_app_okd_supercass_com/CABundle.crt"}
 
 # Configure custom ca certificate
 # NOTE: CA certificate will not be replaced with existing clusters.
 # This option may only be specified when creating a new cluster or
 # when redeploying cluster certificates with the redeploy-certificates
 # playbook. playbooks/redeploy-certificates.yml
-#openshift_master_ca_certificate={'certfile': '/etc/ssl/star_okd_supercass_com/certificate.crt', 'keyfile': '/etc/ssl/star_okd_supercass_com/certificate.key'}
-#openshift_master_ca_certificate={'certfile': '/etc/ssl/root-intermediate/star_okd_supercass_com.crt', 'keyfile': '/etc/ssl/star_okd_supercass_com/certificate.key'}
-
-
-# ROUTER
-#openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/crt.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/private.key", "cafile": "/etc/ssl/star_app_okd_supercass_com/CABundle.crt"}
+#openshift_master_ca_certificate={'certfile': '/etc/ssl/m.okd.supercass.com/ca-bundle.crt', 'keyfile': '/etc/ssl/m.okd.supercass.com/domain_key.key'}
 
 
 
+
+
+
+
+
+
+
+
+# Custom variables that get used in this hosts file
 app_dns_prefix=app
 public_hosted_zone=okd.supercass.com
 load_balancer_hostname=m.{{public_hosted_zone}}
+
 
 # Configuring Cluster Variables
 openshift_hostname=master-internal.okd.supercass.com
@@ -50,25 +63,36 @@ openshift_public_ip=74.118.36.66
 
 # Enable this to use the 3.11 repo
 # COMMENT THIS OUT WHEN 3.10 AND UPDATE 2ND DOWN WITH "3.10"
-openshift_additional_repos=[{'id': 'centos-okd-ci', 'name': 'centos-okd-ci', 'baseurl' :'https://rpms.svc.ci.openshift.org/openshift-origin-v3.11', 'gpgcheck' :'0', 'enabled' :'1'}]
-openshift_release="3.11"
+#openshift_additional_repos=[{'id': 'centos-okd-ci', 'name': 'centos-okd-ci', 'baseurl' :'https://rpms.svc.ci.openshift.org/openshift-origin-v3.11', 'gpgcheck' :'0', 'enabled' :'1'}]
+openshift_release="3.10"
 
-# GlustFS Containerized
+# GlustFS Containerized - storage cluster for applications
 openshift_storage_glusterfs_namespace=app-storage
 openshift_storage_glusterfs_name=storage
 openshift_storage_glusterfs_storageclass=true
 openshift_storage_glusterfs_storageclass_default=false
-openshift_storage_glusterfs_block_deploy=true
-openshift_storage_glusterfs_block_host_vol_create=true
-openshift_storage_glusterfs_block_host_vol_size=52
-openshift_storage_glusterfs_block_storageclass=true
-openshift_storage_glusterfs_block_storageclass_default=false
+openshift_storage_glusterfs_block_deploy=false
+#openshift_storage_glusterfs_block_host_vol_create=true
+#openshift_storage_glusterfs_block_host_vol_size=52
+#openshift_storage_glusterfs_block_storageclass=true
+#openshift_storage_glusterfs_block_storageclass_default=false
 
 openshift_master_dynamic_provisioning_enabled=True
 
+
+# OCS storage cluster for OpenShift infrastructure
+openshift_storage_glusterfs_registry_namespace=infra-storage  
+openshift_storage_glusterfs_registry_storageclass=false       
+openshift_storage_glusterfs_registry_block_deploy=true   
+openshift_storage_glusterfs_registry_block_host_vol_create=true    
+openshift_storage_glusterfs_registry_block_host_vol_size=200   
+openshift_storage_glusterfs_registry_block_storageclass=true
+openshift_storage_glusterfs_registry_block_storageclass_default=false
+
+
 # Docker Registry
 openshift_hosted_registry_storage_kind=glusterfs
-openshift_hosted_registry_storage_volume_size=15Gi
+openshift_hosted_registry_storage_volume_size=20Gi
 openshift_hosted_registry_selector="node-role.kubernetes.io/infra=true"
 
 
@@ -79,10 +103,10 @@ openshift_use_system_containers=False
 os_firewall_use_firewalld=true
 
 # Configuring Cluster Metrics
-#openshift_metrics_cassandra_storage_type=dynamic
+openshift_metrics_cassandra_storage_type=dynamic
 openshift_metrics_install_metrics=true 
 openshift_metrics_storage_kind=dynamic
-openshift_metrics_storage_volume_size=10Gi
+openshift_metrics_storage_volume_size=20Gi
 openshift_metrics_cassandra_pvc_storage_class_name='glusterfs-storage-block'
 openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"}
@@ -92,7 +116,7 @@ openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"
 # Configuring Cluster Logging
 openshift_logging_install_logging=true
 openshift_logging_es_pvc_dynamic=true 
-openshift_logging_es_pvc_size=10Gi
+openshift_logging_es_pvc_size=50Gi
 openshift_logging_es_cluster_size=3
 openshift_logging_es_pvc_storage_class_name='glusterfs-storage-block'
 openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"}
@@ -126,7 +150,8 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 # or to one or all of the masters defined in the inventory if no load
 # balancer is present.
 openshift_master_cluster_method=native
-openshift_master_cluster_hostname="{{ load_balancer_hostname }}"
+#openshift_master_cluster_hostname="{{ load_balancer_hostname }}"
+openshift_master_cluster_hostname="master-internal.okd.supercass.com"
 openshift_master_cluster_public_hostname="{{ load_balancer_hostname }}"
 openshift_master_default_subdomain="{{ app_dns_prefix }}.{{ public_hosted_zone }}"
 
@@ -170,9 +195,8 @@ app02.okd.supercass.com glusterfs_zone=2 glusterfs_devices='["/dev/sdb"]'
 app03.okd.supercass.com glusterfs_zone=3 glusterfs_devices='["/dev/sdb"]'
 
 
-# Disabled for now because doing registry on same disk as apps isn't supported due to apparent i/o issue
-#[glusterfs_registry]
-#app01.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
-#app02.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
-#app03.okd.supercass.com glusterfs_devices='[ "/dev/sdb" ]'
+[glusterfs_registry]
+app01.okd.supercass.com glusterfs_zone=1 glusterfs_devices='[ "/dev/sdb" ]'
+app02.okd.supercass.com glusterfs_zone=2 glusterfs_devices='[ "/dev/sdb" ]'
+app03.okd.supercass.com glusterfs_zone=3 glusterfs_devices='[ "/dev/sdb" ]'
 
