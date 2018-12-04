@@ -8,14 +8,90 @@ etcd
 lb
 glusterfs
 glusterfs_registry
+new_nodes
+
 
 # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
 ansible_ssh_user=root
 openshift_deployment_type=origin
-#debug_level=8
-#openshift_debug_level="{{ debug_level }}"
+#openshift_debug_level="8"
 #openshift_master_audit_config=true
+
+# Custom variables that get used in this hosts file
+app_dns_prefix=app
+public_hosted_zone=okd.supercass.com
+load_balancer_hostname=m.{{public_hosted_zone}}
+
+# Native high availability cluster method with optional load balancer.
+# If no lb group is defined installer assumes that a load balancer has
+# been preconfigured. For installation the value of
+# openshift_master_cluster_hostname must resolve to the load balancer
+# or to one or all of the masters defined in the inventory if no load
+# balancer is present.
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname="master-internal.okd.supercass.com"
+openshift_master_cluster_public_hostname="{{ load_balancer_hostname }}"
+openshift_master_default_subdomain="{{ app_dns_prefix }}.{{ public_hosted_zone }}"
+
+# Configuring Cluster Variables
+openshift_hostname=master-internal.okd.supercass.com
+openshift_public_hostname=m.okd.supercass.com
+openshift_public_ip=74.118.36.93
+
+
+
+
+# WEB CONSOLE CUSTOMIZATIONS
+# Configuring Web Console Customization
+# https://docs.okd.io/3.11/install/configuring_inventory_file.html#configuring-web-console-customization
+
+# Determines whether to install the web console. Can be set to true or false. Defaults to true.
+# openshift_web_console_install
+# Specify the prefix for the web console images.
+# openshift_web_console_prefix
+# Sets clusterInfo.logoutPublicURL in the web console configuration. See Changing the Logout URL for details. Example value: https://example.com/logout
+# openshift_master_logout_url
+# Loading Extension Scripts and Stylesheets : https://docs.okd.io/3.11/install_config/web_console_customization.html#loading-custom-scripts-and-stylesheets
+# Sets extensions.scriptURLs in the web console configuration. See Loading Extension Scripts and Stylesheets 
+# for details. Example value: ['https://example.com/scripts/menu-customization.js','https://example.com/scripts/nav-customization.js']
+# openshift_web_console_extension_script_urls
+# Sets extensions.stylesheetURLs in the web console configuration. See Loading Extension Scripts and Stylesheets
+# for details. Example value: ['https://example.com/styles/logo.css','https://example.com/styles/custom-styles.css']
+# openshift_web_console_extension_stylesheet_urls
+# Sets the OAuth template in the master configuration. See Customizing the Login Page for details. Example value: ['/path/to/login-template.html']
+# openshift_master_oauth_template
+# Sets metricsPublicURL in the master configuration. See Setting the Metrics Public URL for details. Example value: https://hawkular-metrics.example.com/hawkular/metrics
+# openshift_master_metrics_public_url
+# Sets loggingPublicURL in the master configuration. See Kibana for details. Example value: https://kibana.example.com
+# openshift_master_logging_public_url
+# Configurate the web console to log the user out automatically after a period of inactivity. Must be a whole
+# number greater than or equal to 5, or 0 to disable the feature. Defaults to 0 (disabled).
+# openshift_web_console_inactivity_timeout_minutes
+# Boolean value indicating if the cluster is configured for overcommit. When true, the web console will hide
+# fields for CPU request, CPU limit, and memory request when editing resource limits because you must set
+# these values with the cluster resource override configuration.
+# openshift_web_console_cluster_resource_overrides_enabled
+# Enable the context selector in the web console and admin console mastheads for quickly switching between
+# the two consoles. Defaults to true when both consoles are installed.
+# openshift_web_console_enable_context_selector
+
+
+
+
+
+
+
+# NETWORKING
+# Configure the multi-tenant SDN plugin (default is 'redhat/openshift-ovs-subnet')
+os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+
+
+
+# Enable this to use the 3.11 repo
+# COMMENT THIS OUT WHEN 3.10 AND UPDATE 2ND DOWN WITH "3.10"
+openshift_additional_repos=[{'id': 'centos-okd-ci', 'name': 'centos-okd-ci', 'baseurl' :'https://rpms.svc.ci.openshift.org/openshift-origin-v3.11', 'gpgcheck' :'0', 'enabled' :'1'}]
+openshift_release="3.11"
 
 
 
@@ -24,21 +100,15 @@ openshift_deployment_type=origin
 
 
 # If you provide a value for the openshift_master_named_certificates parameter, set this parameter to true
-#openshift_master_overwrite_named_certificates=true
+openshift_master_overwrite_named_certificates=true
 
 # Provisions a master API certificate - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-master
-#openshift_master_named_certificates=[{"certfile": "/etc/ssl/m.okd.supercass.com/certificate_only.crt", "keyfile": "/etc/ssl/m.okd.supercass.com/domain_key.key", "cafile": "/etc/ssl/m.okd.supercass.com/ca-bundle.crt", "names": ["m.okd.supercass.com"]}]
+#openshift_master_named_certificates=[{"certfile": "/etc/ssl/m.okd.supercass.com/master.crt", "keyfile": "/etc/ssl/m.okd.supercass.com/master.key", "cafile": "/etc/ssl/m.okd.supercass.com/master-ca.crt", "names": ["m.okd.supercass.com"]}]
+# CA file not needed? https://github.com/openshift/openshift-docs/issues/7495#issuecomment-362836075
+openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.key", "names": ["m.okd.supercass.com"]}]
 
-# Provisions a wildcard API certificate - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-wildcard
-# I'm unsure if the CA needed to be in "certfile" so I left it out.  As for "cafile", I also don't know if I need to somehow find the root CA or if the cross-signed one in the LetsEncrypt CA is fine
-openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/crt.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/private.key", "cafile": "/etc/ssl/star_app_okd_supercass_com/CABundle.crt"}
-
-# Configure custom ca certificate
-# NOTE: CA certificate will not be replaced with existing clusters.
-# This option may only be specified when creating a new cluster or
-# when redeploying cluster certificates with the redeploy-certificates
-# playbook. playbooks/redeploy-certificates.yml
-#openshift_master_ca_certificate={'certfile': '/etc/ssl/m.okd.supercass.com/ca-bundle.crt', 'keyfile': '/etc/ssl/m.okd.supercass.com/domain_key.key'}
+# Provisions a wildcard certificate for the Router - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-wildcard
+openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/router.crt", "cafile": "/etc/ssl/star_app_okd_supercass_com/router-ca-bundle.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/router.key"}
 
 
 
@@ -47,47 +117,36 @@ openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercas
 
 
 
-
-
-
-# Custom variables that get used in this hosts file
-app_dns_prefix=app
-public_hosted_zone=okd.supercass.com
-load_balancer_hostname=m.{{public_hosted_zone}}
-
-
-# Configuring Cluster Variables
-openshift_hostname=master-internal.okd.supercass.com
-openshift_public_hostname=m.okd.supercass.com
-openshift_public_ip=74.118.36.66
-
-# Enable this to use the 3.11 repo
-# COMMENT THIS OUT WHEN 3.10 AND UPDATE 2ND DOWN WITH "3.10"
-#openshift_additional_repos=[{'id': 'centos-okd-ci', 'name': 'centos-okd-ci', 'baseurl' :'https://rpms.svc.ci.openshift.org/openshift-origin-v3.11', 'gpgcheck' :'0', 'enabled' :'1'}]
-openshift_release="3.10"
 
 # GlustFS Containerized - storage cluster for applications
 openshift_storage_glusterfs_namespace=app-storage
 openshift_storage_glusterfs_name=storage
 openshift_storage_glusterfs_storageclass=true
 openshift_storage_glusterfs_storageclass_default=false
-openshift_storage_glusterfs_block_deploy=false
-#openshift_storage_glusterfs_block_host_vol_create=true
-#openshift_storage_glusterfs_block_host_vol_size=52
-#openshift_storage_glusterfs_block_storageclass=true
-#openshift_storage_glusterfs_block_storageclass_default=false
+openshift_storage_glusterfs_block_deploy=true
+openshift_storage_glusterfs_block_host_vol_create=true
+openshift_storage_glusterfs_block_host_vol_size=52
+openshift_storage_glusterfs_block_storageclass=true
+openshift_storage_glusterfs_block_storageclass_default=false
 
 openshift_master_dynamic_provisioning_enabled=True
+
+
+
 
 
 # OCS storage cluster for OpenShift infrastructure
 openshift_storage_glusterfs_registry_namespace=infra-storage  
 openshift_storage_glusterfs_registry_storageclass=false       
-openshift_storage_glusterfs_registry_block_deploy=true   
+openshift_storage_glusterfs_registry_block_deploy=true 
 openshift_storage_glusterfs_registry_block_host_vol_create=true    
 openshift_storage_glusterfs_registry_block_host_vol_size=200   
 openshift_storage_glusterfs_registry_block_storageclass=true
 openshift_storage_glusterfs_registry_block_storageclass_default=false
+#openshift_storage_glusterfs_registry_block_storageclass_default=true
+
+
+
 
 
 # Docker Registry
@@ -95,12 +154,27 @@ openshift_hosted_registry_storage_kind=glusterfs
 openshift_hosted_registry_storage_volume_size=20Gi
 openshift_hosted_registry_selector="node-role.kubernetes.io/infra=true"
 
+#https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#advanced-install-configuring-docker-route
+openshift_hosted_registry_routehost=docker-registry.app.okd.supercass.com
+openshift_hosted_registry_routecertificates={"certfile": "/etc/ssl/star_app_okd_supercass_com/registry.pem", "keyfile": "/etc/ssl/star_app_okd_supercass_com/registry.key", "cafile": "/etc/ssl/star_app_okd_supercass_com/registry-ca.crt"}
+openshift_hosted_registry_routetermination=reencrypt
+
+
+
+
 
 openshift_use_system_containers=False
-
+openshift_docker_use_system_container=False
 
 # Use firewalld on clean install
 os_firewall_use_firewalld=true
+
+
+
+
+
+
+
 
 # Configuring Cluster Metrics
 openshift_metrics_cassandra_storage_type=dynamic
@@ -111,6 +185,12 @@ openshift_metrics_cassandra_pvc_storage_class_name='glusterfs-storage-block'
 openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"}
+
+
+
+
+
+
 
 
 # Configuring Cluster Logging
@@ -125,11 +205,22 @@ openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
 
 
 # Customizing Service Catalog Options
-openshift_enable_service_catalog=false
+openshift_enable_service_catalog=true
+
+
+# Configuring the Template Service Broker
+# https://docs.okd.io/3.11/install/configuring_inventory_file.html#configuring-template-service-broker
+# The template service broker (TSB) is enabled by default during installation.
+# template_service_broker_install=false
+openshift_template_service_broker_namespaces=['openshift','catalog']
+template_service_broker_selector={"node-role.kubernetes.io/infra":"true"}
 
 
 # etcd
 openshift_use_etcd_system_container=true
+
+
+
 
 # https://github.com/openshift/openshift-ansible/issues/9894#issuecomment-418233398
 openshift_disable_check=disk_availability,docker_storage,memory_availability
@@ -138,25 +229,14 @@ openshift_check_min_host_disk_gb=10
 
 
 # uncomment the following to enable htpasswd authentication; defaults to AllowAllPasswordIdentityProvider
-#openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'True', 'kind': 'HTPasswdPasswordIdentityProvider', 'file': '/etc/origin/master/htpasswd'}]
 openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'True', 'kind': 'HTPasswdPasswordIdentityProvider'}]
-#openshift_master_htpasswd_users={'admin': '$apr1$zAhyA9Ko$rBxBOwAwwtRuuaw8OtCwH0'}
 
 
-# Native high availability cluster method with optional load balancer.
-# If no lb group is defined installer assumes that a load balancer has
-# been preconfigured. For installation the value of
-# openshift_master_cluster_hostname must resolve to the load balancer
-# or to one or all of the masters defined in the inventory if no load
-# balancer is present.
-openshift_master_cluster_method=native
-#openshift_master_cluster_hostname="{{ load_balancer_hostname }}"
-openshift_master_cluster_hostname="master-internal.okd.supercass.com"
-openshift_master_cluster_public_hostname="{{ load_balancer_hostname }}"
-openshift_master_default_subdomain="{{ app_dns_prefix }}.{{ public_hosted_zone }}"
 
 
-openshift_docker_use_system_container=False
+
+
+
 
 # host group for masters
 [masters]
@@ -187,6 +267,7 @@ i02.okd.supercass.com openshift_node_group_name='node-config-infra'
 app01.okd.supercass.com openshift_node_group_name='node-config-compute'
 app02.okd.supercass.com openshift_node_group_name='node-config-compute'
 app03.okd.supercass.com openshift_node_group_name='node-config-compute'
+m.okd.supercass.com openshift_node_group_name='node-config-infra'
 
 
 [glusterfs]
@@ -199,4 +280,6 @@ app03.okd.supercass.com glusterfs_zone=3 glusterfs_devices='["/dev/sdb"]'
 app01.okd.supercass.com glusterfs_zone=1 glusterfs_devices='[ "/dev/sdb" ]'
 app02.okd.supercass.com glusterfs_zone=2 glusterfs_devices='[ "/dev/sdb" ]'
 app03.okd.supercass.com glusterfs_zone=3 glusterfs_devices='[ "/dev/sdb" ]'
+
+[new_nodes]
 
