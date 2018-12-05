@@ -5,7 +5,7 @@
 masters
 nodes
 etcd
-lb
+#lb
 glusterfs
 glusterfs_registry
 new_nodes
@@ -21,7 +21,8 @@ openshift_deployment_type=origin
 # Custom variables that get used in this hosts file
 app_dns_prefix=app
 public_hosted_zone=okd.supercass.com
-load_balancer_hostname=m.{{public_hosted_zone}}
+#load_balancer_external_hostname=m.{{public_hosted_zone}}
+#load_balancer_internal_hostname=master-internal.{{public_hosted_zone}}
 
 # Native high availability cluster method with optional load balancer.
 # If no lb group is defined installer assumes that a load balancer has
@@ -30,17 +31,18 @@ load_balancer_hostname=m.{{public_hosted_zone}}
 # or to one or all of the masters defined in the inventory if no load
 # balancer is present.
 openshift_master_cluster_method=native
-openshift_master_cluster_hostname="master-internal.okd.supercass.com"
-openshift_master_cluster_public_hostname="{{ load_balancer_hostname }}"
+openshift_master_cluster_hostname="master-internal.{{ public_hosted_zone }}"
+openshift_master_cluster_public_hostname="m.{{ public_hosted_zone }}"
 openshift_master_default_subdomain="{{ app_dns_prefix }}.{{ public_hosted_zone }}"
 
 # Configuring Cluster Variables
-openshift_hostname=master-internal.okd.supercass.com
-openshift_public_hostname=m.okd.supercass.com
+openshift_hostname="master-internal.{{ public_hosted_zone }}"
+openshift_public_hostname="m.{{ public_hosted_zone }}"
 #openshift_public_ip=74.118.36.93
+#openshift_public_up=74.118.36.66
 
 
-
+openshift_master_api_port=443
 
 # WEB CONSOLE CUSTOMIZATIONS
 # Configuring Web Console Customization
@@ -108,7 +110,7 @@ openshift_release="3.11"
 #openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.key", "names": ["m.okd.supercass.com"]}]
 
 # Provisions a wildcard certificate for the Router - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-wildcard
-#openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/router.crt", "cafile": "/etc/ssl/star_app_okd_supercass_com/router-ca-bundle.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/router.key"}
+#openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/router.crt.pem", "cafile": "/etc/ssl/star_app_okd_supercass_com/router-ca-bundle.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/router.key"}
 
 
 
@@ -137,7 +139,7 @@ openshift_master_dynamic_provisioning_enabled=true
 
 # OCS storage cluster for OpenShift infrastructure
 openshift_storage_glusterfs_registry_namespace=infra-storage  
-openshift_storage_glusterfs_registry_storageclass=false       
+openshift_storage_glusterfs_registry_storageclass=false
 openshift_storage_glusterfs_registry_block_deploy=true 
 openshift_storage_glusterfs_registry_block_host_vol_create=true    
 openshift_storage_glusterfs_registry_block_host_vol_size=200   
@@ -152,7 +154,11 @@ openshift_storage_glusterfs_registry_block_storageclass_default=false
 # Docker Registry
 openshift_hosted_registry_storage_kind=glusterfs
 openshift_hosted_registry_storage_volume_size=20Gi
+openshift_hosted_registry_storage_kind=dynamic
 openshift_hosted_registry_selector="node-role.kubernetes.io/infra=true"
+# Unsure about the formatting of the 2 lines below
+#openshift_docker_additional_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local
+#openshift_docker_insecure_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local
 
 #https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#advanced-install-configuring-docker-route
 #openshift_hosted_registry_routehost=docker-registry.app.okd.supercass.com
@@ -167,7 +173,7 @@ openshift_use_system_containers=False
 openshift_docker_use_system_container=False
 
 # Use firewalld on clean install
-os_firewall_use_firewalld=true
+os_firewall_use_firewalld=false
 
 
 
@@ -204,6 +210,11 @@ openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
 
 
+
+
+
+
+
 # Customizing Service Catalog Options
 openshift_enable_service_catalog=false
 
@@ -212,8 +223,8 @@ openshift_enable_service_catalog=false
 # https://docs.okd.io/3.11/install/configuring_inventory_file.html#configuring-template-service-broker
 # The template service broker (TSB) is enabled by default during installation.
 template_service_broker_install=false
-openshift_template_service_broker_namespaces=['openshift','catalog']
-template_service_broker_selector={"node-role.kubernetes.io/infra":"true"}
+#openshift_template_service_broker_namespaces=['openshift','catalog']
+#template_service_broker_selector={"node-role.kubernetes.io/infra":"true"}
 
 
 # etcd
@@ -230,11 +241,13 @@ openshift_check_min_host_disk_gb=10
 
 # uncomment the following to enable htpasswd authentication; defaults to AllowAllPasswordIdentityProvider
 openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'True', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+openshift_master_htpasswd_users={"johnadac": "$apr1$Qtn3Xa7B$mm8ILXaagZZQV.Shu8vVZ1", "7l-networks-bot": "$apr1$aizAyGEA$84GMsOBfk5padPY2gmvbL/"}
 
 
 
-
-
+# Node Problem Detector
+# https://docs.openshift.com/container-platform/3.11/admin_guide/node_problem_detector.html#admin-guide-node-problem-detector
+openshift_node_problem_detector_install=true
 
 
 
@@ -253,8 +266,8 @@ m03.okd.supercass.com
 
 
 # Specify load balancer host
-[lb]
-m.okd.supercass.com
+#[lb]
+#m.okd.supercass.com openshift_schedulable=false
 
 
 # host group for nodes, includes region info
@@ -267,7 +280,7 @@ i02.okd.supercass.com openshift_node_group_name='node-config-infra'
 app01.okd.supercass.com openshift_node_group_name='node-config-compute'
 app02.okd.supercass.com openshift_node_group_name='node-config-compute'
 app03.okd.supercass.com openshift_node_group_name='node-config-compute'
-m.okd.supercass.com openshift_node_group_name='node-config-infra'
+#m.okd.supercass.com openshift_node_group_name='node-config-infra' openshift_schedulable=false
 
 
 [glusterfs]
