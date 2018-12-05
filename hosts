@@ -5,7 +5,7 @@
 masters
 nodes
 etcd
-#lb
+lb
 glusterfs
 glusterfs_registry
 new_nodes
@@ -33,7 +33,9 @@ public_hosted_zone=okd.supercass.com
 openshift_master_cluster_method=native
 openshift_master_cluster_hostname="master-internal.{{ public_hosted_zone }}"
 openshift_master_cluster_public_hostname="m.{{ public_hosted_zone }}"
-openshift_master_default_subdomain="{{ app_dns_prefix }}.{{ public_hosted_zone }}"
+#openshift_master_default_subdomain="{{ app_dns_prefix }}.{{ public_hosted_zone }}"
+# https://github.com/redhat-cop/openshift-playbooks/blob/master/playbooks/installation/load_balancing.adoc#simple-ssl-passthrough-non-prod-only
+openshift_master_default_subdomain="m.{{ public_hosted_zone }}"
 
 # Configuring Cluster Variables
 openshift_hostname="master-internal.{{ public_hosted_zone }}"
@@ -129,7 +131,7 @@ openshift_storage_glusterfs_block_deploy=true
 openshift_storage_glusterfs_block_host_vol_create=true
 openshift_storage_glusterfs_block_host_vol_size=52
 openshift_storage_glusterfs_block_storageclass=true
-openshift_storage_glusterfs_block_storageclass_default=true
+openshift_storage_glusterfs_block_storageclass_default=false
 
 openshift_master_dynamic_provisioning_enabled=true
 
@@ -169,8 +171,8 @@ openshift_hosted_registry_selector="node-role.kubernetes.io/infra=true"
 
 
 
-openshift_use_system_containers=False
-openshift_docker_use_system_container=False
+openshift_use_system_containers=false
+openshift_docker_use_system_container=false
 
 # Use firewalld on clean install
 os_firewall_use_firewalld=false
@@ -266,8 +268,8 @@ m03.okd.supercass.com
 
 
 # Specify load balancer host
-#[lb]
-#m.okd.supercass.com openshift_schedulable=false
+[lb]
+m.okd.supercass.com openshift_schedulable=false
 
 
 # host group for nodes, includes region info
@@ -280,7 +282,7 @@ i02.okd.supercass.com openshift_node_group_name='node-config-infra'
 app01.okd.supercass.com openshift_node_group_name='node-config-compute'
 app02.okd.supercass.com openshift_node_group_name='node-config-compute'
 app03.okd.supercass.com openshift_node_group_name='node-config-compute'
-#m.okd.supercass.com openshift_node_group_name='node-config-infra' openshift_schedulable=false
+m.okd.supercass.com openshift_node_group_name='node-config-infra' openshift_schedulable=false
 
 
 [glusterfs]
