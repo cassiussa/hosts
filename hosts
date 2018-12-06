@@ -5,7 +5,7 @@
 masters
 nodes
 etcd
-lb
+#lb
 glusterfs
 glusterfs_registry
 new_nodes
@@ -121,20 +121,23 @@ openshift_release="3.11"
 
 
 
-
 # GlustFS Containerized - storage cluster for applications
+#openshift_storage_glusterfs_name=storage
+# Below must be enabled or you get:
+# fatal: [m01.okd.supercass.com]: FAILED! => {"changed": false, "msg": "Using a storage kind of 'dynamic' without enabling dynamic provisioning nor
+# setting a cloud provider will cause generated PVCs to not be able to bind as intended. Either update to not use a dynamic storage or set
+# openshift_master_dynamic_provisioning_enabled to True and set an openshift_cloudprovider_kind. You can disable this check with 'dynamic_volumes_check=False'."}
+
+openshift_master_dynamic_provisioning_enabled=true
+
 openshift_storage_glusterfs_namespace=app-storage
-openshift_storage_glusterfs_name=storage
 openshift_storage_glusterfs_storageclass=true
 openshift_storage_glusterfs_storageclass_default=false
 openshift_storage_glusterfs_block_deploy=true
 openshift_storage_glusterfs_block_host_vol_create=true
-openshift_storage_glusterfs_block_host_vol_size=52
+openshift_storage_glusterfs_block_host_vol_size=78
 openshift_storage_glusterfs_block_storageclass=true
 openshift_storage_glusterfs_block_storageclass_default=false
-
-openshift_master_dynamic_provisioning_enabled=true
-
 
 
 
@@ -154,9 +157,9 @@ openshift_storage_glusterfs_registry_block_storageclass_default=false
 
 
 # Docker Registry
-openshift_hosted_registry_storage_kind=glusterfs
-openshift_hosted_registry_storage_volume_size=20Gi
 openshift_hosted_registry_storage_kind=dynamic
+openshift_hosted_registry_storage_kind=glusterfs
+openshift_hosted_registry_storage_volume_size=30Gi
 openshift_hosted_registry_selector="node-role.kubernetes.io/infra=true"
 # Unsure about the formatting of the 2 lines below
 #openshift_docker_additional_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local
@@ -185,7 +188,15 @@ os_firewall_use_firewalld=false
 
 
 # Configuring Cluster Metrics
-openshift_metrics_cassandra_storage_type=dynamic
+#openshift_metrics_cassandra_storage_type=dynamic
+#openshift_metrics_install_metrics=true 
+#openshift_metrics_storage_kind=dynamic
+#openshift_metrics_storage_volume_size=20Gi
+#openshift_metrics_cassandra_pvc_storage_class_name='glusterfs-storage-block'
+#openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"}
+#openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"}
+#openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"}
+
 openshift_metrics_install_metrics=true 
 openshift_metrics_storage_kind=dynamic
 openshift_metrics_storage_volume_size=20Gi
@@ -193,8 +204,6 @@ openshift_metrics_cassandra_pvc_storage_class_name='glusterfs-storage-block'
 openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"}
-
-
 
 
 
@@ -210,7 +219,6 @@ openshift_logging_es_pvc_storage_class_name='glusterfs-storage-block'
 openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
-
 
 
 
@@ -262,14 +270,17 @@ m03.okd.supercass.com
 
 # host group for etcd
 [etcd]
+#74.118.36.67
+#74.118.36.68
+#74.118.36.69
 m01.okd.supercass.com
 m02.okd.supercass.com
 m03.okd.supercass.com
 
 
 # Specify load balancer host
-[lb]
-m.okd.supercass.com openshift_schedulable=false
+#[lb]
+#m.okd.supercass.com openshift_schedulable=false
 
 
 # host group for nodes, includes region info
@@ -282,7 +293,7 @@ i02.okd.supercass.com openshift_node_group_name='node-config-infra'
 app01.okd.supercass.com openshift_node_group_name='node-config-compute'
 app02.okd.supercass.com openshift_node_group_name='node-config-compute'
 app03.okd.supercass.com openshift_node_group_name='node-config-compute'
-m.okd.supercass.com openshift_node_group_name='node-config-infra' openshift_schedulable=false
+#m.okd.supercass.com openshift_node_group_name='node-config-infra' openshift_schedulable=false
 
 
 [glusterfs]
