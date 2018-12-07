@@ -122,58 +122,49 @@ openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercas
 
 
 # GlustFS Containerized - storage cluster for applications
-openshift_storage_glusterfs_name=storage
 # Below must be enabled or you get:
 # fatal: [m01.okd.supercass.com]: FAILED! => {"changed": false, "msg": "Using a storage kind of 'dynamic' without enabling dynamic provisioning nor
 # setting a cloud provider will cause generated PVCs to not be able to bind as intended. Either update to not use a dynamic storage or set
 # openshift_master_dynamic_provisioning_enabled to True and set an openshift_cloudprovider_kind. You can disable this check with 'dynamic_volumes_check=False'."}
 
 openshift_master_dynamic_provisioning_enabled=True
-openshift_storage_glusterfs_heketi_is_native=True
-openshift_storage_glusterfs_heketi_topology_load=True
-openshift_storage_glusterfs_heketi_url="heketi.app.okd.supercass.com"
-#openshift_storage_glusterfs_is_native=true
+####
+# https://docs.okd.io/latest/install_config/persistent_storage/persistent_storage_glusterfs.html#install-example-full
+####
+openshift_hosted_registry_storage_kind=glusterfs 
+openshift_hosted_registry_storage_volume_size=20Gi
+openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
 
-openshift_storage_glusterfs_wipe=true
+openshift_metrics_install_metrics=true
+openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"} 
+openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"} 
+openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"} 
+openshift_metrics_storage_kind=dynamic
+openshift_metrics_storage_volume_size=10Gi
+openshift_metrics_cassandra_pvc_storage_class_name="glusterfs-registry-block" 
+
+openshift_logging_install_logging=true
+openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"} 
+openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"} 
+openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"} 
+openshift_logging_storage_kind=dynamic
+openshift_logging_es_pvc_size=10Gi                        
+openshift_logging_es_pvc_storage_class_name="glusterfs-registry-block"       
 
 openshift_storage_glusterfs_namespace=app-storage
 openshift_storage_glusterfs_storageclass=true
 openshift_storage_glusterfs_storageclass_default=false
 openshift_storage_glusterfs_block_deploy=true
-openshift_storage_glusterfs_block_host_vol_create=true
 openshift_storage_glusterfs_block_host_vol_size=100
 openshift_storage_glusterfs_block_storageclass=true
 openshift_storage_glusterfs_block_storageclass_default=false
 
-
-
-
-# OCS storage cluster for OpenShift infrastructure
-openshift_storage_glusterfs_registry_namespace=default 
-openshift_storage_glusterfs_registry_name='docker-registry'
-openshift_storage_glusterfs_registry_storageclass=false
-openshift_storage_glusterfs_registry_block_deploy=true 
-openshift_storage_glusterfs_registry_block_host_vol_create=true    
-openshift_storage_glusterfs_registry_block_host_vol_size=100 
+openshift_storage_glusterfs_registry_namespace=infra-storage
+openshift_storage_glusterfs_registry_block_deploy=true
+openshift_storage_glusterfs_registry_block_host_vol_size=100
 openshift_storage_glusterfs_registry_block_storageclass=true
 openshift_storage_glusterfs_registry_block_storageclass_default=false
-
-
-
-
-
-# Docker Registry
-openshift_hosted_registry_storage_kind=glusterfs
-openshift_hosted_registry_storage_volume_size=30Gi
-openshift_hosted_registry_selector="node-role.kubernetes.io/infra=true"
-
-#https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#advanced-install-configuring-docker-route
-#openshift_hosted_registry_routehost=docker-registry.app.okd.supercass.com
-#openshift_hosted_registry_routecertificates={"certfile": "/etc/ssl/star_app_okd_supercass_com/registry.pem", "keyfile": "/etc/ssl/star_app_okd_supercass_com/registry.key", "cafile": "/etc/ssl/star_app_okd_supercass_com/registry-ca.crt"}
-#openshift_hosted_registry_routetermination=reencrypt
-
-
-
+#########################################################################################
 
 
 openshift_use_system_containers=false
@@ -189,37 +180,18 @@ os_firewall_use_firewalld=false
 
 
 
-# Configuring Cluster Metrics
-# https://docs.okd.io/latest/install_config/cluster_metrics.html#metrics-ansible-variables "If you want to explicitly set the storage class, you must not set openshift_metrics_cassandra_storage_type to emptydir or dynamic."
-#openshift_metrics_cassandra_storage_type=dynamic
-
-openshift_metrics_install_metrics=true 
-#openshift_metrics_storage_kind=glusterfs
-openshift_metrics_storage_kind=dynamic
-openshift_metrics_storage_volume_size=10Gi
-openshift_metrics_cassandra_pvc_storage_class_name='glusterfs-storage-block'
-openshift_metrics_hawkular_hostname="hawkular.app.okd.supercass.com"
-openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"}
-openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"}
-openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"}
 
 
+# Unsure about the formatting of the 2 lines below
+openshift_docker_additional_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local
+openshift_docker_insecure_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local
+
+#https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#advanced-install-configuring-docker-route
+openshift_hosted_registry_routehost=docker-registry.app.okd.supercass.com
+openshift_hosted_registry_routecertificates={"certfile": "/etc/ssl/star_app_okd_supercass_com/registry.pem", "keyfile": "/etc/ssl/star_app_okd_supercass_com/registry.key", "cafile": "/etc/ssl/star_app_okd_supercass_com/registry-ca.crt"}
+openshift_hosted_registry_routetermination=reencrypt
 
 
-
-
-# Configuring Cluster Logging
-openshift_logging_install_logging=true
-openshift_logging_storage_kind=dynamic
-openshift_logging_es_pvc_dynamic=true 
-openshift_logging_es_pvc_size=10Gi
-openshift_logging_es_cluster_size=3
-openshift_logging_master_public_url="logs.app.okd.supercass.com"
-openshift_logging_kibana_hostname="kibana.app.okd.supercass.com"
-openshift_logging_es_pvc_storage_class_name='glusterfs-storage-block'
-openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"}
-openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"}
-openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
 
 
 
