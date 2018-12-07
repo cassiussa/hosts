@@ -112,7 +112,11 @@ openshift_release="3.11"
 #openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.key", "names": ["m.okd.supercass.com"]}]
 
 # Provisions a wildcard certificate for the Router - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-wildcard
+
+
+
 openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/router.crt.pem", "cafile": "/etc/ssl/star_app_okd_supercass_com/router-ca-bundle.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/router.key"}
+
 
 
 
@@ -128,9 +132,10 @@ openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercas
 # openshift_master_dynamic_provisioning_enabled to True and set an openshift_cloudprovider_kind. You can disable this check with 'dynamic_volumes_check=False'."}
 
 openshift_master_dynamic_provisioning_enabled=True
-####
+openshift_glusterfs_storage_name=storage
+##########################################################################################
 # https://docs.okd.io/latest/install_config/persistent_storage/persistent_storage_glusterfs.html#install-example-full
-####
+##########################################################################################
 openshift_hosted_registry_storage_kind=glusterfs 
 openshift_hosted_registry_storage_volume_size=20Gi
 openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
@@ -148,19 +153,24 @@ openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_logging_storage_kind=dynamic
+openshift_logging_es_pvc_dynamic=true
 openshift_logging_es_pvc_size=10Gi                        
 openshift_logging_es_pvc_storage_class_name="glusterfs-registry-block"       
 
 openshift_storage_glusterfs_namespace=app-storage
 openshift_storage_glusterfs_storageclass=true
-openshift_storage_glusterfs_storageclass_default=false
+openshift_storage_glusterfs_storageclass_default=true #updated
 openshift_storage_glusterfs_block_deploy=true
+
 openshift_storage_glusterfs_block_host_vol_size=100
 openshift_storage_glusterfs_block_storageclass=true
 openshift_storage_glusterfs_block_storageclass_default=false
 
 openshift_storage_glusterfs_registry_namespace=infra-storage
 openshift_storage_glusterfs_registry_block_deploy=true
+openshift_storage_glusterfs_registry_storageclass=false
+openshift_storage_glusterfs_registry_storageclass_default=false
+openshift_storage_glusterfs_registry_block_host_vol_create=true
 openshift_storage_glusterfs_registry_block_host_vol_size=100
 openshift_storage_glusterfs_registry_block_storageclass=true
 openshift_storage_glusterfs_registry_block_storageclass_default=false
@@ -183,8 +193,8 @@ os_firewall_use_firewalld=false
 
 
 # Unsure about the formatting of the 2 lines below
-openshift_docker_additional_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local
-openshift_docker_insecure_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local
+openshift_docker_additional_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local,docker.io
+openshift_docker_insecure_registries=172.30.0.0/16,docker-registry.default.svc,docker-registry.default.svc.cluster.local
 
 #https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#advanced-install-configuring-docker-route
 openshift_hosted_registry_routehost=docker-registry.app.okd.supercass.com
