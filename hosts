@@ -46,42 +46,6 @@ openshift_public_hostname="m.{{ public_hosted_zone }}"
 openshift_master_api_port=443
 openshift_master_console_port=443
 
-# WEB CONSOLE CUSTOMIZATIONS
-# Configuring Web Console Customization
-# https://docs.okd.io/3.11/install/configuring_inventory_file.html#configuring-web-console-customization
-
-# Determines whether to install the web console. Can be set to true or false. Defaults to true.
-# openshift_web_console_install
-# Specify the prefix for the web console images.
-# openshift_web_console_prefix
-# Sets clusterInfo.logoutPublicURL in the web console configuration. See Changing the Logout URL for details. Example value: https://example.com/logout
-# openshift_master_logout_url
-# Loading Extension Scripts and Stylesheets : https://docs.okd.io/3.11/install_config/web_console_customization.html#loading-custom-scripts-and-stylesheets
-# Sets extensions.scriptURLs in the web console configuration. See Loading Extension Scripts and Stylesheets 
-# for details. Example value: ['https://example.com/scripts/menu-customization.js','https://example.com/scripts/nav-customization.js']
-# openshift_web_console_extension_script_urls
-# Sets extensions.stylesheetURLs in the web console configuration. See Loading Extension Scripts and Stylesheets
-# for details. Example value: ['https://example.com/styles/logo.css','https://example.com/styles/custom-styles.css']
-# openshift_web_console_extension_stylesheet_urls
-# Sets the OAuth template in the master configuration. See Customizing the Login Page for details. Example value: ['/path/to/login-template.html']
-# openshift_master_oauth_template
-# Sets metricsPublicURL in the master configuration. See Setting the Metrics Public URL for details. Example value: https://hawkular-metrics.example.com/hawkular/metrics
-# openshift_master_metrics_public_url
-# Sets loggingPublicURL in the master configuration. See Kibana for details. Example value: https://kibana.example.com
-# openshift_master_logging_public_url
-# Configurate the web console to log the user out automatically after a period of inactivity. Must be a whole
-# number greater than or equal to 5, or 0 to disable the feature. Defaults to 0 (disabled).
-# openshift_web_console_inactivity_timeout_minutes
-# Boolean value indicating if the cluster is configured for overcommit. When true, the web console will hide
-# fields for CPU request, CPU limit, and memory request when editing resource limits because you must set
-# these values with the cluster resource override configuration.
-# openshift_web_console_cluster_resource_overrides_enabled
-# Enable the context selector in the web console and admin console mastheads for quickly switching between
-# the two consoles. Defaults to true when both consoles are installed.
-# openshift_web_console_enable_context_selector
-
-
-
 
 
 
@@ -102,19 +66,7 @@ openshift_release="3.11"
 
 
 
-
-# If you provide a value for the openshift_master_named_certificates parameter, set this parameter to true
-#openshift_master_overwrite_named_certificates=true
-
-# Provisions a master API certificate - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-master
-#openshift_master_named_certificates=[{"certfile": "/etc/ssl/m.okd.supercass.com/master.crt", "keyfile": "/etc/ssl/m.okd.supercass.com/master.key", "cafile": "/etc/ssl/m.okd.supercass.com/master-ca.crt", "names": ["m.okd.supercass.com"]}]
-# CA file not needed? https://github.com/openshift/openshift-docs/issues/7495#issuecomment-362836075
-#openshift_master_named_certificates=[{"certfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.crt", "keyfile": "/etc/ssl/star_okd_supercass_com/star_okd_supercass_com.key", "names": ["m.okd.supercass.com"]}]
-
 # Provisions a wildcard certificate for the Router - https://docs.openshift.com/container-platform/3.11/install_config/certificate_customization.html#configuring-custom-certificates-wildcard
-
-
-
 openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercass_com/router.crt.pem", "cafile": "/etc/ssl/star_app_okd_supercass_com/router-ca-bundle.crt", "keyfile": "/etc/ssl/star_app_okd_supercass_com/router.key"}
 
 
@@ -131,8 +83,20 @@ openshift_hosted_router_certificate={"certfile": "/etc/ssl/star_app_okd_supercas
 # setting a cloud provider will cause generated PVCs to not be able to bind as intended. Either update to not use a dynamic storage or set
 # openshift_master_dynamic_provisioning_enabled to True and set an openshift_cloudprovider_kind. You can disable this check with 'dynamic_volumes_check=False'."}
 
-openshift_master_dynamic_provisioning_enabled=True
+# A name to identify the GlusterFS cluster, which will be used in resource names. Defaults to 'storage'
+openshift_storage_glusterfs_name=storage
+# The name for the route will be 'heketi-glusterfs-route' unless the default 'glusterfs' value was overridden using the 'openshift_glusterfs_storage_name' variable in the inventory file
 openshift_glusterfs_storage_name=storage
+
+#openshift_storage_glusterfs_wipe=true # Moved into reinstall.sh
+openshift_storage_glusterfs_is_native=true
+openshift_storage_glusterfs_heketi_is_native=True
+openshift_storage_glusterfs_heketi_topology_load=false
+openshift_storage_glusterfs_heketi_url="heketi.app.okd.supercass.com"
+openshift_storage_glusterfs_block_host_vol_create=true
+
+openshift_master_dynamic_provisioning_enabled=True
+openshift_hosted_registry_replicas=2
 ##########################################################################################
 # https://docs.okd.io/latest/install_config/persistent_storage/persistent_storage_glusterfs.html#install-example-full
 ##########################################################################################
@@ -146,7 +110,7 @@ openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true
 openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_storage_kind=dynamic
 openshift_metrics_storage_volume_size=10Gi
-openshift_metrics_cassandra_pvc_storage_class_name="glusterfs-registry-block" 
+openshift_metrics_cassandra_pvc_storage_class_name="glusterfs-storage-block" 
 
 openshift_logging_install_logging=true
 openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"} 
@@ -155,20 +119,20 @@ openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_logging_storage_kind=dynamic
 openshift_logging_es_pvc_dynamic=true
 openshift_logging_es_pvc_size=10Gi                        
-openshift_logging_es_pvc_storage_class_name="glusterfs-registry-block"       
+openshift_logging_es_pvc_storage_class_name="glusterfs-storage-block"
 
 openshift_storage_glusterfs_namespace=app-storage
 openshift_storage_glusterfs_storageclass=true
-openshift_storage_glusterfs_storageclass_default=true #updated
-openshift_storage_glusterfs_block_deploy=true
+openshift_storage_glusterfs_storageclass_default=true
+openshift_storage_glusterfs_block_deploy=false
 
-openshift_storage_glusterfs_block_host_vol_size=100
-openshift_storage_glusterfs_block_storageclass=true
-openshift_storage_glusterfs_block_storageclass_default=false
+#openshift_storage_glusterfs_block_host_vol_size=100
+#openshift_storage_glusterfs_block_storageclass=true
+#openshift_storage_glusterfs_block_storageclass_default=false
 
 openshift_storage_glusterfs_registry_namespace=infra-storage
 openshift_storage_glusterfs_registry_block_deploy=true
-openshift_storage_glusterfs_registry_storageclass=false
+openshift_storage_glusterfs_registry_storageclass=true
 openshift_storage_glusterfs_registry_storageclass_default=false
 openshift_storage_glusterfs_registry_block_host_vol_create=true
 openshift_storage_glusterfs_registry_block_host_vol_size=100
@@ -193,8 +157,8 @@ os_firewall_use_firewalld=false
 
 
 # Unsure about the formatting of the 2 lines below
-openshift_docker_additional_registries=172.30.0.0/16,docker-registry.app.okd.supercass.com,docker-registry.default.svc,docker-registry.default.svc.cluster.local,docker.io
-openshift_docker_insecure_registries=172.30.0.0/16,docker-registry.default.svc,docker-registry.default.svc.cluster.local
+openshift_docker_additional_registries=docker-registry.app.okd.supercass.com,docker-registry.default.svc:5000,docker-registry.default.svc.cluster.local:5000,docker.io,quay.io
+openshift_docker_insecure_registries=docker-registry.default.svc:5000,docker-registry.default.svc.cluster.local:5000
 
 #https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#advanced-install-configuring-docker-route
 openshift_hosted_registry_routehost=docker-registry.app.okd.supercass.com
@@ -242,6 +206,51 @@ openshift_master_htpasswd_users={"johnadac": "$apr1$Qtn3Xa7B$mm8ILXaagZZQV.Shu8v
 # https://docs.openshift.com/container-platform/3.11/admin_guide/node_problem_detector.html#admin-guide-node-problem-detector
 # Disabled for now since the containers aren't available for OKD
 #openshift_node_problem_detector_install=true
+
+
+
+
+
+
+
+
+
+
+
+
+# WEB CONSOLE CUSTOMIZATIONS
+# Configuring Web Console Customization
+# https://docs.okd.io/3.11/install/configuring_inventory_file.html#configuring-web-console-customization
+
+# Determines whether to install the web console. Can be set to true or false. Defaults to true.
+# openshift_web_console_install
+# Specify the prefix for the web console images.
+# openshift_web_console_prefix
+# Sets clusterInfo.logoutPublicURL in the web console configuration. See Changing the Logout URL for details. Example value: https://example.com/logout
+# openshift_master_logout_url
+# Loading Extension Scripts and Stylesheets : https://docs.okd.io/3.11/install_config/web_console_customization.html#loading-custom-scripts-and-stylesheets
+# Sets extensions.scriptURLs in the web console configuration. See Loading Extension Scripts and Stylesheets
+# for details. Example value: ['https://example.com/scripts/menu-customization.js','https://example.com/scripts/nav-customization.js']
+# openshift_web_console_extension_script_urls
+# Sets extensions.stylesheetURLs in the web console configuration. See Loading Extension Scripts and Stylesheets
+# for details. Example value: ['https://example.com/styles/logo.css','https://example.com/styles/custom-styles.css']
+# openshift_web_console_extension_stylesheet_urls
+# Sets the OAuth template in the master configuration. See Customizing the Login Page for details. Example value: ['/path/to/login-template.html']
+# openshift_master_oauth_template
+# Sets metricsPublicURL in the master configuration. See Setting the Metrics Public URL for details. Example value: https://hawkular-metrics.example.com/hawkular/metrics
+# openshift_master_metrics_public_url
+# Sets loggingPublicURL in the master configuration. See Kibana for details. Example value: https://kibana.example.com
+# openshift_master_logging_public_url
+# Configurate the web console to log the user out automatically after a period of inactivity. Must be a whole
+# number greater than or equal to 5, or 0 to disable the feature. Defaults to 0 (disabled).
+# openshift_web_console_inactivity_timeout_minutes
+# Boolean value indicating if the cluster is configured for overcommit. When true, the web console will hide
+# fields for CPU request, CPU limit, and memory request when editing resource limits because you must set
+# these values with the cluster resource override configuration.
+# openshift_web_console_cluster_resource_overrides_enabled
+# Enable the context selector in the web console and admin console mastheads for quickly switching between
+# the two consoles. Defaults to true when both consoles are installed.
+# openshift_web_console_enable_context_selector
 
 
 
